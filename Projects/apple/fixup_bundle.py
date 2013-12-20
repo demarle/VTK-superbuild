@@ -104,8 +104,11 @@ class Library(object):
   @classmethod
   def createFromReference(cls, ref, exepath):
     path = ref.replace("@executable_path", exepath)
+    print path
     if not os.path.exists(path):
+      print "not found"
       path = _find(ref)
+      print path
     return cls.createFromPath(path)
 
   @classmethod
@@ -168,6 +171,7 @@ def _find(ref):
   for loc in SearchLocations:
     output = commands.getoutput('find "%s" -name "%s"' % (loc, name)).strip()
     if output:
+      print "FOUND FROM SEARCH",output
       return output
   return ref
 
@@ -180,6 +184,8 @@ if __name__ == "__main__":
   else:
     QtPluginsDir = None
   LibrariesPrefix = "Contents/Libraries"
+  print "SL:",SearchLocations
+  print "PD:",QtPluginsDir
 
   print "------------------------------------------------------------"
   print "Fixing up ",App
@@ -198,6 +204,7 @@ if __name__ == "__main__":
   # Find libraries inside the package already.
   libraries = commands.getoutput('find %s -type f | xargs file | grep -i "Mach-O.*shared library" | sed "s/:.*//" | sort' % App)
   libraries = libraries.split()
+  print libraries
   print "Found %d libraries within the package." % len(libraries)
 
   # Find external libraries. Any libraries referred to with @.* relative paths are treated as already in the package.

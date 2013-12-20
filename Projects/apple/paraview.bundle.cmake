@@ -8,7 +8,7 @@ include(CPack)
 install(CODE
   "
   set(PV_PYTHON_LIB_INSTALL_PREFIX
-  \"\${CMAKE_INSTALL_PREFIX}/paraview.app/Contents/Python\")
+  \"\${CMAKE_INSTALL_PREFIX}/bin/vtkpython.app/Contents/Python\")
   "
   COMPONENT superbuild)
 
@@ -16,13 +16,13 @@ install(CODE
 # we only to paraview explicitly.
 install(CODE "
               file(INSTALL DESTINATION \"\${CMAKE_INSTALL_PREFIX}\" USE_SOURCE_PERMISSIONS TYPE DIRECTORY FILES
-                   \"${install_location}/Applications/paraview.app\")
-              file(WRITE \"\${CMAKE_INSTALL_PREFIX}/paraview.app/Contents/Resources/qt.conf\"
+                   \"${install_location}/bin/vtkpython.app\")
+              file(WRITE \"\${CMAKE_INSTALL_PREFIX}/bin/vtkpython.app/Contents/Resources/qt.conf\"
                          \"\")
               execute_process(
                 COMMAND ${CMAKE_CURRENT_LIST_DIR}/fixup_bundle.py
-                        \"\${CMAKE_INSTALL_PREFIX}/paraview.app\"
-                        \"${install_location}/lib\"
+                        \"\${CMAKE_INSTALL_PREFIX}/vtkpython.app\"
+                        \"${install_location}/bin/vtkpython.app/Contents/Libraries\"
                         \"${install_location}/plugins\")
    "
    COMPONENT superbuild)

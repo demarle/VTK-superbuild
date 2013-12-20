@@ -22,13 +22,6 @@ elseif (WIN32)
 endif()
 
 #-----------------------------------------------------------------------------
-# Cross compilation
-set (CROSS_BUILD_STAGE "HOST" CACHE STRING
-  "Cross compilation stage: either HOST(ie no crosscompile)|TOOLS|CROSS")
-set_property(CACHE CROSS_BUILD_STAGE PROPERTY STRINGS
-   "HOST" "TOOLS" "CROSS")
-
-#-----------------------------------------------------------------------------
 # Setup CMAKE_MODULE_PATH so that platform specific configurations are processed
 # before the generic ones.
 string(TOLOWER "${CROSS_BUILD_STAGE}" lstage)
@@ -41,37 +34,17 @@ set (CMAKE_MODULE_PATH
   "${CMAKE_CURRENT_SOURCE_DIR}"
   ${CMAKE_MODULE_PATH})
 
-#-----------------------------------------------------------------------------
-if (NOT CROSS_BUILD_STAGE STREQUAL "HOST")
-  include(CrossCompilationMacros)
-
-  #ask user to say what machine they are compiling onto
-  #so we can get the right environment settings
-  query_target_machine()
-
-  if (CROSS_BUILD_STAGE STREQUAL "CROSS")
-    #configure the platform dependent settings
-    #64bit_build, static_only, mpi search path
-    do_cross_platform_settings()
-
-    #find location of hosttools or host build to get compilation tools from
-    find_hosttools()
-  endif()
-endif()
-
 include(CMakeDependentOption)
 
 #-----------------------------------------------------------------------------
 # Collect information about the build platform.
 include(CheckTypeSize)
 
-if (NOT CROSS_BUILD_STAGE STREQUAL "CROSS")
-  check_type_size(void* VOID_PTR_SIZE BUILTIN_TYPES_ONLY)
-  if (VOID_PTR_SIZE EQUAL 8)
-    set (64bit_build TRUE)
-  else ()
-    set (64bit_build FALSE)
-  endif()
+check_type_size(void* VOID_PTR_SIZE BUILTIN_TYPES_ONLY)
+if (VOID_PTR_SIZE EQUAL 8)
+  set (64bit_build TRUE)
+else ()
+  set (64bit_build FALSE)
 endif()
 
 # Set suffix to be used for generating archives. This ensures that the package
@@ -104,11 +77,9 @@ if (WIN32)
 else ()
   # FIXME: currently, if any of these are empty, we have build issues on Unix.
   set (ldflags "$ENV{LDFLAGS} -L${install_location}/lib")
-  if (NOT CROSS_BUILD_STAGE STREQUAL "CROSS")
-    set (cppflags "$ENV{CPPFLAGS} -fPIC")
-    set (cxxflags "$ENV{CXXFLAGS} -fPIC")
-    set (cflags "$ENV{CFLAGS} -fPIC")
-  endif()
+  set (cppflags "$ENV{CPPFLAGS} -fPIC")
+  set (cxxflags "$ENV{CXXFLAGS} -fPIC")
+  set (cflags "$ENV{CFLAGS} -fPIC")
   set (ld_library_path "${install_location}/lib:$ENV{LD_LIBRARY_PATH}")
 endif()
 
@@ -188,136 +159,24 @@ configure_file(
 #-----------------------------------------------------------------------------
 set (CM_PROJECTS_ALL)
 
-if (NOT WIN32)
-  # Check if there's a Fortran compiler. If there is, CMAKE_Fortran_COMPILER
-  # will be set. Note that as of CMake 2.8.11 that CMAKE_Fortran_COMPILER
-  # isn't passed to the external projects so setting it to something else
-  # will give unexpected results. This is CMake Mantis issue 14,231.
-  include(CheckFortran)
+include(hdf5)
+include(libxml2)
+include(numpy)
+include(png)
+include(python)
+include(szip)
+include(zlib)
+
+if (UNIX AND NOT APPLE)
+  include(fontconfig)
 endif()
 
-
-# Include all optional projects. These are the ones user can pick and choose.
-# Some of these allow using system libraries too.
-if (CROSS_BUILD_STAGE STREQUAL "CROSS")
-  #include(crossnumpy)
-  include(python)
-  include(mesa)
-  include(paraview)
-elseif(CROSS_BUILD_STAGE STREQUAL "TOOLS")
-  include(boost)
-  include(png)
-  include(zlib)
-  include(python)
-  include(paraview)
-  include(portfwd)
-else()
-  include(boost)
-  include(cgns)
-  include(freetype)
-  include(hdf5)
-  include(libxml2)
-  include(manta)
-  include(matplotlib)
-  include(mpi)
-  include(numpy)
-  include(png)
-  include(python)
-  include(qt)
-  include(silo)
-  include(szip)
-  include(visitbridge)
-  include(zlib)
-  if(CMAKE_Fortran_COMPILER)
-    # both of these packages require a Fortran compiler to build so we
-    # only present them to the user if we have one.
-    include(nektarreader)
-    include(lapack)
-  endif()
-
-  if (UNIX)
-    # Supported on Linux/Mac
-    include(ffmpeg)
-  endif()
-
-  if (UNIX AND NOT APPLE)
-    include(portfwd)
-    include(fontconfig)
-    include(mesa)
-    include(osmesa)
-  endif()
-
-  # Build CosmoTools on Linux and OS X
-  if (UNIX)
-    include(qhull)
-    include(diy)
-    include(genericio)
-    include(cosmotools)
-  endif()
-
-  # REMEMBER to tell VTK/ParaView to use VTK_SYSTEM_* for the
-  # libraries we've built here.
-  include(paraview)
-  include(vistrails)
-  include(acusolve)
-
-  # paraview.sdk is a module that is used install the ParaView SDK.
-  # Simply enabling this module will result in the ParaView SDK to be
-  # installed by "make install". Note that this is not always supported.
-  include(paraviewsdk OPTIONAL)
-endif()
-
-#-------------------------------------------------------------------------
-# Add any additional project that the user wants
-set(PV_EXTERNAL_PROJECTS "" CACHE STRING
-    "Provide the list of Projects that ParaView should additionally depends on")
-mark_as_advanced(PV_EXTERNAL_PROJECTS)
-
-# Include all additional external projects
-# Its their responsability to check the system and provide empty target if the
-# platform is not supported
-foreach(external_project IN ITEMS ${PV_EXTERNAL_PROJECTS})
-  include(${external_project})
-  set(ENABLE_${external_project} ON CACHE BOOL "" FORCE)
-endforeach()
-
+# REMEMBER to tell VTK/ParaView to use VTK_SYSTEM_* for the
+# libraries we've built here.
+include(paraview)
 
 process_dependencies()
-
-#-------------------------------------------------------------------------
-# Some sanity checks.
-# Sanity check: Cannot has osmesa and qt enabled at the same time.
-if (osmesa_ENABLED AND qt_ENABLED)
-  message(SEND_ERROR "Cannot enable OSMesa and QT at the same time.")
-endif()
-# Sanity check: Cannot has osmesa and mesa at the same time.
-if (osmesa_ENABLED AND mesa_ENABLED)
-  message(SEND_ERROR "Cannot enable OSMesa and Mesa at the same time.")
-endif()
-#-------------------------------------------------------------------------
 
 if (paraview_ENABLED)
   include(paraview.bundle OPTIONAL)
 endif()
-
-option(NIGHTLY_BINARY_TESTING "Run Nightly-Binary ParaView Testing" OFF)
-if (NIGHTLY_BINARY_TESTING)
-  add_subdirectory(tests)
-endif()
-
-#------------------------------------------------------------------------------
-# Test to check install tree for paraviewsdk
-#------------------------------------------------------------------------------
-if (BUILD_TESTING AND paraviewsdk_ENABLED)
-  add_test ( NAME TestParaViewSDKInstall
-    COMMAND ${CMAKE_COMMAND}
-    -DPARAVIEW_BINARY_DIR:PATH=${SuperBuild_BINARY_DIR}
-    -DPARAVIEW_INSTALL_DIR:PATH=${CMAKE_INSTALL_PREFIX}
-    -DPARAVIEW_SOURCE_DIR:PATH=${SuperBuild_BINARY_DIR}/paraview/src/paraview
-    -DPARAVIEW_TEST_DIR:PATH=${SuperBuild_BINARY_DIR}/Testing/Temporary
-    -DPARAVIEW_VERSION:STRING=${pv_version}
-    -P ${SuperBuild_CMAKE_DIR}/ParaViewSDKTestInstall.cmake)
-  set_tests_properties(TestParaViewSDKInstall PROPERTIES
-                       LABELS "PARAVIEW"
-                       TIMEOUT 1500)
-endif ()
