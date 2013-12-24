@@ -56,9 +56,6 @@ add_revision(boost
   URL "http://www.paraview.org/files/dependencies/boost_1_50_0.tar.gz"
   URL_MD5 dbc07ab0254df3dda6300fd737b3f264)
 
-#if (ParaView_FROM_GIT)
-  # Download PV from GIT
-  add_revision(paraview
-    GIT_REPOSITORY git://vtk.org/VTK.git
-    GIT_TAG "master")
-#endif()
+add_revision(vtk
+  GIT_REPOSITORY git://vtk.org/VTK.git
+  GIT_TAG "master")

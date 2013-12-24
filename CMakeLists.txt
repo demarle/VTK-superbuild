@@ -56,7 +56,7 @@ else ()
   set (package_suffix "${package_suffix}-32bit")
 endif()
 
-include(paraview_version)
+include(vtk_version)
 
 option(TRUST_SVN_CERTIFICATES_AUTOMATICALLY
   "Trust SVN certificates automatically" ON)
@@ -122,7 +122,7 @@ string (STRIP "${cxxflags}" cxxflags)
 string (STRIP "${cflags}"  cflags)
 #-----------------------------------------------------------------------------
 ## Top-level options. These must be limited to a commonly used subset with
-## default values being used for building ParaView binaries.
+## default values being used for building VTK binaries.
 #option(PV_COMMAND_LINE_TOOLS_ONLY
 #  "Turn this ON to build command lines tools alone." OFF)
 
@@ -173,10 +173,8 @@ endif()
 
 # REMEMBER to tell VTK/ParaView to use VTK_SYSTEM_* for the
 # libraries we've built here.
-include(paraview)
+include(vtk)
 
 process_dependencies()
 
-if (paraview_ENABLED)
-  include(paraview.bundle OPTIONAL)
-endif()
+include(vtk.bundle)

@@ -69,12 +69,14 @@ class Library(object):
     return self.__depencies
 
   def copyToApp(self, app, fakeCopy=False):
+    appdir = os.path.dirname(app)
     if _isframework(self.RealPath):
+      print "is framework"
       m = re.match(r'(.*)/(\w+\.framework)/(.*)', self.RealPath)
       # FIXME: this could be optimized to only copy the particular version.
       if not fakeCopy:
         print "Copying %s/%s ==> %s" % (m.group(1), m.group(2), ".../Contents/Frameworks/")
-        dirdest = os.path.join(os.path.join(app, "Contents/Frameworks/"), m.group(2))
+        dirdest = os.path.join(os.path.join(appdir, "Contents/Frameworks/"), m.group(2))
         filedest = os.path.join(dirdest, m.group(3))
         shutil.copytree(os.path.join(m.group(1), m.group(2)), dirdest, symlinks=True)
       self.Id = "@executable_path/../Frameworks/%s" % (os.path.join(m.group(2), m.group(3)))
@@ -82,33 +84,35 @@ class Library(object):
       if not fakeCopy:
         commands.getoutput('install_name_tool -id "%s" %s' % (self.Id, filedest))
     else:
+      print "is library"
       if not fakeCopy:
-        print "Copying %s ==> %s" % (self.RealPath, ".../Contents/Libraries/%s" % os.path.basename(self.RealPath))
-        shutil.copy(self.RealPath, os.path.join(app, "Contents/Libraries"))
-      self.Id = "@executable_path/../Libraries/%s" % os.path.basename(self.RealPath)
+        print "Copying %s ==> %s" % (self.RealPath, os.path.join(appdir, "..", "/lib/"))
+        shutil.copy(self.RealPath, os.path.join(appdir, "..", "lib"))
+      self.Id = "@executable_path/../lib/%s" % os.path.basename(self.RealPath)
       if not fakeCopy:
         commands.getoutput('install_name_tool -id "%s" %s' % (self.Id,
-                            os.path.join(app, "Contents/Libraries/%s" % os.path.basename(self.RealPath))))
-
+                            os.path.join(appdir, "../lib/%s" % os.path.basename(self.RealPath))))
+      """
       # Create symlinks for this copied file in the install location
       # as were present in the source dir.
-      destdir = os.path.join(app, "Contents/Libraries")
+      destdir = os.path.join(appdir, "../lib")
       # sourcefile is the file we copied already into the app bundle. We need to create symlink
       # to it itself in the app bundle.
       sourcefile = os.path.basename(self.RealPath)
       for symlink in self.SymLinks:
-        print "Creating Symlink %s ==> .../Contents/Libraries/%s" % (symlink, os.path.basename(self.RealPath))
+        print "Creating Symlink %s ==> .../../lib/%s" % (symlink, os.path.basename(self.RealPath))
         if not fakeCopy:
           commands.getoutput("ln -s %s %s" % (sourcefile, os.path.join(destdir, symlink)))
+      """
 
   @classmethod
   def createFromReference(cls, ref, exepath):
     path = ref.replace("@executable_path", exepath)
-    print path
+    print "looking for ", path
     if not os.path.exists(path):
       print "not found"
       path = _find(ref)
-      print path
+      print "result:", path
     return cls.createFromPath(path)
 
   @classmethod
@@ -171,7 +175,7 @@ def _find(ref):
   for loc in SearchLocations:
     output = commands.getoutput('find "%s" -name "%s"' % (loc, name)).strip()
     if output:
-      print "FOUND FROM SEARCH",output
+      print "find command found:", output
       return output
   return ref
 
@@ -179,30 +183,15 @@ SearchLocations = []
 if __name__ == "__main__":
   App = sys.argv[1]
   SearchLocations = [sys.argv[2]]
-  if len(sys.argv) > 3:
-    QtPluginsDir = sys.argv[3]
-  else:
-    QtPluginsDir = None
-  LibrariesPrefix = "Contents/Libraries"
-  print "SL:",SearchLocations
-  print "PD:",QtPluginsDir
+  print "App:",App
+  print "SearchLocations:",SearchLocations
 
-  print "------------------------------------------------------------"
-  print "Fixing up ",App
-  print "All required frameworks/libraries will be placed under %s/%s" % (App, LibrariesPrefix)
-  print ""
-
-  executables = commands.getoutput('find %s -type f| xargs file | grep -i "Mach-O.*executable" | sed "s/:.*//" | sort' % App)
-  executables = executables.split()
-  print "------------------------------------------------------------"
-  print "Found executables : "
-  for exe in executables:
-    print "    %s/%s" % (os.path.basename(App) ,os.path.relpath(exe, App))
-  print ""
-
+  appdir = os.path.dirname(App)
+  print "appdir:",appdir
+  #os.mkdir(os.path.join(appdir,"..","lib"))
 
   # Find libraries inside the package already.
-  libraries = commands.getoutput('find %s -type f | xargs file | grep -i "Mach-O.*shared library" | sed "s/:.*//" | sort' % App)
+  libraries = commands.getoutput('find %s -type f | xargs file | grep -i "Mach-O.*shared library" | sed "s/:.*//" | sort' % SearchLocations[0])
   libraries = libraries.split()
   print libraries
   print "Found %d libraries within the package." % len(libraries)
@@ -211,20 +200,24 @@ if __name__ == "__main__":
   # ITS NOT THIS SCRIPT'S JOB TO FIX BROKEN INSTALL RULES.
 
   external_libraries = commands.getoutput(
-    'find %s | xargs file | grep "Mach-O" | sed "s/:.*//" | xargs otool -l | grep " name" | sort | uniq | sed "s/name\ //" | grep -v "@" | sed "s/ (offset.*)//"' % App)
+    'find %s | xargs file | grep "Mach-O" | sed "s/:.*//" | xargs otool -l | grep " name" | sort | uniq | sed "s/name\ //" | grep -v "@" | sed "s/ (offset.*)//"' % appdir)
+  elibraries = external_libraries.split()
+  print elibraries
+  print "Found %d external libraries refered to by the executable." % len(elibraries)
 
   mLibraries = set()
-  for lib in external_libraries.split():
+  all_libs = libraries + external_libraries.split()
+  for lib in all_libs:
     if not isexcluded(lib):
       print "Processing ", lib
-      mLibraries.add(Library.createFromReference(lib, "%s/Contents/MacOS/foo" % App))
+      mLibraries.add(Library.createFromReference(lib, "%s/../lib" % appdir))
 
   print "Found %d direct external dependencies." % len(mLibraries)
 
   def recursive_dependency_scan(base, to_scan):
     dependencies = set()
     for lib in to_scan:
-      dependencies.update(lib.dependencies("%s/Contents/MacOS" % App))
+      dependencies.update(lib.dependencies("%s/../lib" % appdir))
     dependencies -= base
     # Now we have the list of non-packaged dependencies.
     dependencies_to_package = set()
@@ -246,30 +239,24 @@ if __name__ == "__main__":
   install_name_tool_command = []
   for dep in mLibraries:
     old_id = dep.Id
+    print "copy ", dep
     dep.copyToApp(App)
     new_id = dep.Id
     install_name_tool_command += ["-change", '"%s"' % old_id, '"%s"' % new_id]
   print ""
 
   install_name_tool_command = " ".join(install_name_tool_command)
-
-  # If Qt Plugins dir is specified, copies those in right now.
-  # We need to fix paths on those too.
-  # Currently, we are not including plugins in the external dependency search.
-  if QtPluginsDir:
-    print "------------------------------------------------------------"
-    print "Copying Qt plugins "
-    print "  %s ==> .../Contents/Plugins" % QtPluginsDir
-    commands.getoutput('cp -R "%s/" "%s/Contents/Plugins"' % (QtPluginsDir, App))
+  print "command:", install_name_tool_command
 
   print "------------------------------------------------------------"
   print "Running 'install_name_tool' to fix paths to copied files."
   print ""
   # Run the command for all libraries and executables.
   # The --separator for file allows helps use locate the file name accurately.
-  binaries_to_fix = commands.getoutput('find %s -type f | xargs file --separator ":--:" | grep -i ":--:.*Mach-O" | sed "s/:.*//" | sort | uniq ' % App).split()
-
-
+  binaries_to_fix = commands.getoutput('find %s -type f | xargs file --separator ":--:" | grep -i ":--:.*Mach-O" | sed "s/:.*//" | sort | uniq ' % appdir).split()
+  binaries_to_fix2 = commands.getoutput('find %s/../lib -type f | xargs file --separator ":--:" | grep -i ":--:.*Mach-O" | sed "s/:.*//" | sort | uniq ' % appdir).split()
+  binaries_to_fix = binaries_to_fix + binaries_to_fix2
+  print "TO FIX:", binaries_to_fix
   result = ""
   for dep in binaries_to_fix:
     commands.getoutput('chmod u+w "%s"' % dep)
