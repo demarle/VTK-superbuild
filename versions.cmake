@@ -56,6 +56,10 @@ add_revision(boost
   URL "http://www.paraview.org/files/dependencies/boost_1_50_0.tar.gz"
   URL_MD5 dbc07ab0254df3dda6300fd737b3f264)
 
-add_revision(vtk
-  GIT_REPOSITORY git://vtk.org/VTK.git
-  GIT_TAG "master")
+#add_revision(vtk
+#  GIT_REPOSITORY git://vtk.org/VTK.git
+#  GIT_TAG "master")
+set (VTK_URL "http://www.vtk.org/files/release/6.1/VTK-6.1.0.tar.gz" CACHE STRING "URL to grab vtk tarball from")
+#set (VTK_URL_MD5 "7117afdcccc013e3d6b77e99c2012a79" CACHE STRING "MD5 of the VTK tarball")
+add_revision(vtk URL ${VTK_URL})# URL_MD5 ${VTK_URL_MD5})
+

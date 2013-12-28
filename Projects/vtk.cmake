@@ -8,6 +8,15 @@ if(VTK_NIGHTLY_SUFFIX)
     -DVTK_NIGHTLY_SUFFIX:STRING=${VTK_NIGHTLY_SUFFIX})
 endif()
 
+set(osdefaultflags)
+if (platform STREQUAL "linux")
+  list(APPEND osdefaultflags "-DVTK_INSTALL_LIBRARY_DIR:STRING=lib")
+  list(APPEND osdefaultflags "-DVTK_INSTALL_PYTHON_MODULE_DIR:STRING=lib/python2.7/site-packages")
+elseif (platform STREQUAL "linux")
+  list(APPEND osdefaultflags "-DVTK_INSTALL_LIBRARY_DIR:STRING=<INSTALL_DIR>/lib")
+  list(APPEND osdefaultflags "-DVTK_INSTALL_PYTHON_MODULE_DIR:STRING=<INSTALL_DIR>/bin")
+endif()
+
 add_external_project(vtk
   DEPENDS_OPTIONAL
     boost ffmpeg hdf5 numpy png python zlib
@@ -18,12 +27,11 @@ add_external_project(vtk
     -DBUILD_TESTING:BOOL=OFF
     -DVTK_WRAP_PYTHON:BOOL=ON
     -DVTK_USE_SYSTEM_HDF5:BOOL=${hdf5_ENABLED}
-    -DVTK_INSTALL_LIBRARY_DIR:STRING=<INSTALL_DIR>/lib
-    -DVTK_INSTALL_PYTHON_MODULE_DIR:STRING=<INSTALL_DIR>/lib/Python
+    ${osdefaultflags}
 
     # specify the apple app install prefix. No harm in specifying it for all
     # platforms.
-    #-DMACOSX_APP_INSTALL_PREFIX:PATH=<INSTALL_DIR>/Applications
+    -DMACOSX_APP_INSTALL_PREFIX:PATH=<INSTALL_DIR>/Applications
 
   ${extra_cmake_args}
 

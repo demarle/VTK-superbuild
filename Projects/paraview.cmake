@@ -18,8 +18,8 @@ add_external_project(paraview
     -DBUILD_TESTING:BOOL=OFF
     -DVTK_WRAP_PYTHON:BOOL=${python_ENABLED}
     -DVTK_USE_SYSTEM_HDF5:BOOL=${hdf5_ENABLED}
-    -DVTK_INSTALL_LIBRARY_DIR:STRING=<INSTALL_DIR>/bin/vtkpython.app/Contents/Libraries
-    -DVTK_INSTALL_PYTHON_MODULE_DIR:STRING=<INSTALL_DIR>/bin/vtkpython.app/Contents/Libraries/Python
+    -DVTK_INSTALL_LIBRARY_DIR:STRING=<INSTALL_DIR>/lib
+    -DVTK_INSTALL_PYTHON_MODULE_DIR:STRING=<INSTALL_DIR>/lib/Python
 
     # specify the apple app install prefix. No harm in specifying it for all
     # platforms.
