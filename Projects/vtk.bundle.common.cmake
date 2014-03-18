@@ -3,8 +3,12 @@
 include (vtk_version)
 
 # Enable CPack packaging.
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_BINARY_DIR}/vtk/src/vtk/Copyright.txt")
-set(CPACK_RESOURCE_FILE_README "${CMAKE_BINARY_DIR}/vtk/src/vtk/README.html")
+
+# ===> This will fail if VTK is not yet downloaded <=====
+# set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_BINARY_DIR}/vtk/src/vtk/Copyright.txt")
+# set(CPACK_RESOURCE_FILE_README "${CMAKE_BINARY_DIR}/vtk/src/vtk/README.html")
+# -------------------------------------------------------
+
 set(CPACK_RESOURCE_FILE_WELCOME "${CMAKE_SOURCE_DIR}/Projects/readme.vtkpython.txt")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
   "VTK is a library for scientific visualization.")

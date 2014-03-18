@@ -1,5 +1,12 @@
 cmake_minimum_required(VERSION 2.8.8)
 
+#-----------------------------------------------------------------------------
+# Setup Superbuild type
+#-----------------------------------------------------------------------------
+option(GENERATE_JAVA_PACKAGE "Build and package VTK as a Maven Java package." OFF)
+mark_as_advanced(GENERATE_JAVA_PACKAGE)
+
+
 if (APPLE)
   if(NOT CMAKE_OSX_DEPLOYMENT_TARGET)
     message(WARNING "Ensure that CMAKE_OSX_SYSROOT, CMAKE_OSX_DEPLOYMENT_TARGET are set correctly")
@@ -177,4 +184,6 @@ include(vtk)
 
 process_dependencies()
 
-include(vtk.bundle)
+if (vtk_ENABLED)
+  include(vtk.bundle OPTIONAL)
+endif()

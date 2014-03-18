@@ -17,6 +17,32 @@ elseif (platform STREQUAL "linux")
   list(APPEND osdefaultflags "-DVTK_INSTALL_PYTHON_MODULE_DIR:STRING=<INSTALL_DIR>/bin")
 endif()
 
+# --------------------------
+# Build type
+# --------------------------
+
+set(package_conf)
+if(GENERATE_JAVA_PACKAGE)
+
+  # --------------------------
+  # Cmd line that should be run to pre-download Java libraries dependancies:
+  # - mvn org.apache.maven.plugins:maven-dependency-plugin:2.1:get -DrepoUrl=http://repo1.maven.org/maven2 -Dartifact=org.jogamp.gluegen:gluegen-rt:2.0.2
+  # - mvn org.apache.maven.plugins:maven-dependency-plugin:2.1:get -DrepoUrl=http://repo1.maven.org/maven2 -Dartifact=org.jogamp.jogl:jogl-all:2.0.2
+  # --------------------------
+  message("Generate Java package for ${package_suffix}")
+
+  list(APPEND package_conf "-DVTK_WRAP_PYTHON:BOOL=OFF")
+  list(APPEND package_conf "-DVTK_WRAP_JAVA:BOOL=ON")
+  list(APPEND package_conf "-DVTK_JAVA_INSTALL:BOOL=ON")
+  list(APPEND package_conf "-DVTK_JAVA_JOGL_COMPONENT:BOOL=ON")
+  list(APPEND package_conf "-DMAVEN_LOCAL_NATIVE_NAME:STRING=${package_suffix}")
+  list(APPEND package_conf "-DMAVEN_NATIVE_ARTIFACTS:STRING=Linux-64bit:Linux-32bit:Win-32bit:Win-64bit:Darwin-64bit")
+  list(APPEND package_conf "-DMAVEN_VTK_GROUP_ID:STRING=kitware.community")
+else()
+  list(APPEND package_conf "-DVTK_WRAP_PYTHON:BOOL=ON")
+  list(APPEND package_conf "-DVTK_WRAP_JAVA:BOOL=OFF")
+endif()
+
 add_external_project(vtk
   DEPENDS_OPTIONAL
     boost ffmpeg hdf5 numpy png python zlib
@@ -25,7 +51,7 @@ add_external_project(vtk
   CMAKE_ARGS
     -DBUILD_SHARED_LIBS:BOOL=ON
     -DBUILD_TESTING:BOOL=OFF
-    -DVTK_WRAP_PYTHON:BOOL=ON
+
     -DVTK_USE_SYSTEM_HDF5:BOOL=${hdf5_ENABLED}
     ${osdefaultflags}
 
@@ -33,6 +59,7 @@ add_external_project(vtk
     # platforms.
     -DMACOSX_APP_INSTALL_PREFIX:PATH=<INSTALL_DIR>/Applications
 
+  ${package_conf}
   ${extra_cmake_args}
 
   ${VTK_EXTRA_CMAKE_ARGS}
