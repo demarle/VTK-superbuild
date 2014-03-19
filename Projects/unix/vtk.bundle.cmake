@@ -62,3 +62,12 @@ else()
       COMPONENT superbuild)
   endforeach()
 endif()
+
+add_test(NAME GenerateVTKPackage
+         COMMAND ${CMAKE_CPACK_COMMAND} -G TGZ -V
+         WORKING_DIRECTORY ${SuperBuild_BINARY_DIR})
+set_tests_properties(GenerateVTKPackage PROPERTIES
+                     # needed so that tests are run on typical paraview
+                     # dashboards
+                     LABELS "VTK"
+                     TIMEOUT 1200) # increase timeout to 20 mins.
