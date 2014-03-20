@@ -43,7 +43,7 @@ else()
   list(APPEND package_conf "-DVTK_WRAP_JAVA:BOOL=OFF")
 endif()
 
-ExternalProject_Add(vtk
+add_external_project(vtk
   DEPENDS_OPTIONAL
     boost ffmpeg hdf5 numpy png python zlib
     ${VTK_EXTERNAL_PROJECTS}
