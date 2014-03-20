@@ -3,12 +3,6 @@
 include(vtk.bundle.common)
 include(CPack)
 
-# install all VTK's shared libraries.
-install(DIRECTORY "@install_location@/lib/"
-  DESTINATION "lib"
-  USE_SOURCE_PERMISSIONS
-  COMPONENT superbuild)
-
 if(GENERATE_JAVA_PACKAGE)
   install(CODE
     "
@@ -25,6 +19,12 @@ if(GENERATE_JAVA_PACKAGE)
     "
     COMPONENT superbuild)
 else()
+  # install all VTK's shared libraries.
+  install(DIRECTORY "@install_location@/lib/"
+    DESTINATION "lib"
+    USE_SOURCE_PERMISSIONS
+    COMPONENT superbuild)
+
   # install python
   if (python_ENABLED AND NOT USE_SYSTEM_python)
     install(DIRECTORY "@install_location@/lib/python2.7"

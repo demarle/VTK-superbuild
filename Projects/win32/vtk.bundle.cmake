@@ -27,9 +27,6 @@ endif()
 
 # URL to website providing assistance in installing your application.
 set (CPACK_NSIS_HELP_LINK "http://vtk.org/Wiki/VTK")
-set (CPACK_NSIS_MENU_LINKS
-  "bin/vtkpython.exe" "VTK"
-  )
 
 #FIXME: need a pretty icon.
 
@@ -50,6 +47,9 @@ if(GENERATE_JAVA_PACKAGE)
     COMPONENT superbuild)
 else()
   #------------------------------------------------------------------------------
+  set (CPACK_NSIS_MENU_LINKS
+    "bin/vtkpython.exe" "VTK"
+  )
 
   file(INSTALL
     DESTINATION "doc"
