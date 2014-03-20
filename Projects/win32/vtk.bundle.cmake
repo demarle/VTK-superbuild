@@ -128,3 +128,15 @@ endif()
 # include CPack at end so that all COMPONENTs specified in install rules are
 # correctly detected.
 include(CPack)
+
+add_test(NAME GenerateParaViewPackage-ZIP
+         COMMAND ${CMAKE_CPACK_COMMAND} -G ZIP -V
+         WORKING_DIRECTORY ${SuperBuild_BINARY_DIR})
+
+set_tests_properties(GenerateParaViewPackage-ZIP
+                     PROPERTIES
+                     # needed so that tests are run on typical paraview
+                     # dashboards
+                     LABELS "VTK"
+                     TIMEOUT 1200) # increase timeout to 20 mins.
+
