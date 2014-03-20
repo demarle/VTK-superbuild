@@ -48,8 +48,6 @@ ExternalProject_Add(vtk
     boost ffmpeg hdf5 numpy png python zlib
     ${VTK_EXTERNAL_PROJECTS}
 
-  LIST_SEPARATOR |
-
   CMAKE_ARGS
     -DBUILD_SHARED_LIBS:BOOL=ON
     -DBUILD_TESTING:BOOL=OFF
