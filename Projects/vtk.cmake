@@ -38,6 +38,15 @@ if(GENERATE_JAVA_PACKAGE)
   list(APPEND package_conf "-DMAVEN_LOCAL_NATIVE_NAME:STRING=${package_suffix}")
   list(APPEND package_conf "-DMAVEN_NATIVE_ARTIFACTS:STRING=Linux-64bit:Linux-32bit:Win-32bit:Win-64bit:Darwin-64bit")
   list(APPEND package_conf "-DMAVEN_VTK_GROUP_ID:STRING=kitware.community")
+
+  # Move VTK_JAVA_INSTALL work now to make sure they get processed by CMake
+  # within a single Configuration pass
+  list(APPEND package_conf "-DVTK_CUSTOM_LIBRARY_SUFFIX:STRING=")
+  if(APPLE)
+    list(APPEND package_conf "-DCMAKE_INSTALL_NAME_DIR:STRING=@loader_path")
+  endif()
+
+  set(VTK_CUSTOM_LIBRARY_SUFFIX "" CACHE STRING "" FORCE)
 else()
   list(APPEND package_conf "-DVTK_WRAP_PYTHON:BOOL=ON")
   list(APPEND package_conf "-DVTK_WRAP_JAVA:BOOL=OFF")
