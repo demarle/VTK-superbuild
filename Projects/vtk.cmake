@@ -47,6 +47,16 @@ if(GENERATE_JAVA_PACKAGE)
   endif()
 
   set(VTK_CUSTOM_LIBRARY_SUFFIX "" CACHE STRING "" FORCE)
+
+  # Set JOGL path if provided
+  if(JOGL_LIB)
+    list(APPEND package_conf "-DJOGL_LIB:FILEPATH=${JOGL_LIB}")
+  endif()
+
+  if(JOGL_GLUE)
+    list(APPEND package_conf "-DJOGL_GLUE:FILEPATH=${JOGL_GLUE}")
+  endif()
+
 else()
   list(APPEND package_conf "-DVTK_WRAP_PYTHON:BOOL=ON")
   list(APPEND package_conf "-DVTK_WRAP_JAVA:BOOL=OFF")
