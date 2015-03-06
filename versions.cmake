@@ -58,7 +58,7 @@ add_revision(boost
 
 add_revision(vtk
   GIT_REPOSITORY git://vtk.org/VTK.git
-  GIT_TAG "master")
+  GIT_TAG "origin/release")
 
 # set (VTK_URL "http://www.vtk.org/files/release/6.1/VTK-6.1.0.tar.gz" CACHE STRING "URL to grab vtk tarball from")
 # set (VTK_URL_MD5 "7117afdcccc013e3d6b77e99c2012a79" CACHE STRING "MD5 of the VTK tarball")
