@@ -1,7 +1,7 @@
 # We hardcode the version numbers since we cannot determine versions during
 # configure stage.
 set (vtk_version_major 6)
-set (vtk_version_minor 2)
+set (vtk_version_minor 3)
 set (vtk_version_patch 0)
 #set (vtk_version_suffix "RC2")
 set (vtk_version "${vtk_version_major}.${vtk_version_minor}")
